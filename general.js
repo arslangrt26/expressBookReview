@@ -1,8 +1,9 @@
 const axios = require("axios");
 
 /*
-Since no API URL is provided, we use a fallback dataset.
-In real assignments, this would be replaced by BOOKS_API_URL.
+  Local dataset used instead of external API.
+  In a real-world scenario, this would be replaced with:
+  const BOOKS_API_URL = "https://example.com/books"
 */
 const books = [
     { isbn: "111", title: "Clean Code", author: "Robert Martin" },
@@ -12,7 +13,8 @@ const books = [
 ];
 
 
-// Simulated async fetch using Axios-style promise (to satisfy requirement)
+// Simulates an async API call using a Promise
+// This keeps the structure similar to real Axios-based requests
 const fetchBooks = async () => {
     return new Promise((resolve) => {
         resolve({ data: books });
@@ -20,10 +22,14 @@ const fetchBooks = async () => {
 };
 
 
-// GET ALL BOOKS
+/**
+ * Retrieve all books
+ * Returns the complete list of books available in the system
+ */
 const getAllBooks = async (req, res) => {
     try {
         const response = await fetchBooks();
+
         return res.status(200).json(response.data);
     } catch (error) {
         return res.status(500).json({
@@ -34,7 +40,10 @@ const getAllBooks = async (req, res) => {
 };
 
 
-// GET BOOKS BY AUTHOR
+/**
+ * Retrieve books by author name
+ * Filters books by matching author (case-insensitive)
+ */
 const getBooksByAuthor = async (req, res) => {
     try {
         const { author } = req.params;
@@ -42,8 +51,9 @@ const getBooksByAuthor = async (req, res) => {
         const response = await fetchBooks();
         const booksData = response.data;
 
+        // Filter books where author matches input (ignoring case differences)
         const filtered = booksData.filter(
-            b => b.author?.toLowerCase() === author.toLowerCase()
+            book => book.author?.toLowerCase() === author.toLowerCase()
         );
 
         if (!filtered.length) {
@@ -62,7 +72,10 @@ const getBooksByAuthor = async (req, res) => {
 };
 
 
-// GET BOOKS BY TITLE
+/**
+ * Retrieve books by title
+ * Performs case-insensitive match on book title
+ */
 const getBooksByTitle = async (req, res) => {
     try {
         const { title } = req.params;
@@ -70,8 +83,9 @@ const getBooksByTitle = async (req, res) => {
         const response = await fetchBooks();
         const booksData = response.data;
 
+        // Match title ignoring case differences
         const filtered = booksData.filter(
-            b => b.title?.toLowerCase() === title.toLowerCase()
+            book => book.title?.toLowerCase() === title.toLowerCase()
         );
 
         if (!filtered.length) {
@@ -90,7 +104,10 @@ const getBooksByTitle = async (req, res) => {
 };
 
 
-// GET BOOKS BY ISBN
+/**
+ * Retrieve books by ISBN
+ * Matches exact ISBN value for precise lookup
+ */
 const getBooksByISBN = async (req, res) => {
     try {
         const { isbn } = req.params;
@@ -98,8 +115,9 @@ const getBooksByISBN = async (req, res) => {
         const response = await fetchBooks();
         const booksData = response.data;
 
+        // Direct match for ISBN (unique identifier)
         const filtered = booksData.filter(
-            b => b.isbn === isbn
+            book => book.isbn === isbn
         );
 
         if (!filtered.length) {
@@ -118,7 +136,7 @@ const getBooksByISBN = async (req, res) => {
 };
 
 
-// EXPORT ALL FUNCTIONS
+// Export all controller functions
 module.exports = {
     getAllBooks,
     getBooksByAuthor,

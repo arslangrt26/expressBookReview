@@ -1,43 +1,52 @@
 const axios = require("axios");
 
-const getBooks = async (req, res) => {
+const getBooksByAuthor = async (req, res) => {
   try {
     const { author } = req.query;
 
-    const { data: books } = await axios.get("http://example-api/books");
-
-    if (!Array.isArray(books)) {
-      return res.status(500).json({ message: "Invalid data format received" });
+    // 1. Validate input
+    if (!author || typeof author !== "string" || author.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Author query parameter is required and must be a non-empty string",
+        data: null
+      });
     }
 
-    let result = books;
+    const normalizedAuthor = author.trim().toLowerCase();
 
-    // Filter by author if provided
-    if (author) {
-      const normalizedAuthor = author.toLowerCase().trim();
+    // 2. Fetch data
+    const response = await axios.get("https://example.com/books"); // replace with real API
+    const books = response.data;
 
-      result = books.filter((book) =>
-        book.author?.toLowerCase().includes(normalizedAuthor)
-      );
+    // 3. Filter safely
+    const filteredBooks = books.filter(
+      b => b.author && b.author.toLowerCase() === normalizedAuthor
+    );
 
-      if (result.length === 0) {
-        return res.status(404).json({
-          message: `No books found for author: ${author}`,
-        });
-      }
+    // 4. Not found case
+    if (filteredBooks.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No books found for author: ${author}`,
+        data: []
+      });
     }
 
+    // 5. Success response
     return res.status(200).json({
-      count: result.length,
-      books: result,
+      success: true,
+      message: "Books retrieved successfully",
+      data: filteredBooks
     });
 
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch books",
-      error: error.message,
+      success: false,
+      message: "Internal server error while fetching books",
+      error: error.message
     });
   }
 };
 
-module.exports = { getBooks };
+module.exports = { getBooksByAuthor };

@@ -1,80 +1,43 @@
 const axios = require("axios");
 
-const BASE_URL = "https://api.example.com/books";
-
-/**
- * Build query params safely
- */
-function buildParams(filters = {}) {
-  return Object.fromEntries(
-    Object.entries(filters).filter(([, value]) => value)
-  );
-}
-
-/**
- * =========================================
- * PROMISE-BASED IMPLEMENTATION
- * =========================================
- */
-
-function getBooksPromise(filters = {}) {
-  const params = buildParams(filters);
-
-  return axios
-    .get(BASE_URL, { params })
-    .then((res) => res.data)
-    .catch((err) => {
-      console.error("getBooksPromise error:", err.message);
-      throw err;
-    });
-}
-
-function getBookByISBNPromise(isbn) {
-  return axios
-    .get(`${BASE_URL}/${isbn}`)
-    .then((res) => res.data)
-    .catch((err) => {
-      console.error("getBookByISBNPromise error:", err.message);
-      throw err;
-    });
-}
-
-/**
- * =========================================
- * ASYNC / AWAIT IMPLEMENTATION
- * =========================================
- */
-
-async function getBooks(filters = {}) {
+const getBooks = async (req, res) => {
   try {
-    const params = buildParams(filters);
-    const res = await axios.get(BASE_URL, { params });
-    return res.data;
-  } catch (err) {
-    console.error("getBooks error:", err.message);
-    throw err;
+    const { author } = req.query;
+
+    const { data: books } = await axios.get("http://example-api/books");
+
+    if (!Array.isArray(books)) {
+      return res.status(500).json({ message: "Invalid data format received" });
+    }
+
+    let result = books;
+
+    // Filter by author if provided
+    if (author) {
+      const normalizedAuthor = author.toLowerCase().trim();
+
+      result = books.filter((book) =>
+        book.author?.toLowerCase().includes(normalizedAuthor)
+      );
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          message: `No books found for author: ${author}`,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      count: result.length,
+      books: result,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch books",
+      error: error.message,
+    });
   }
-}
-
-async function getBookByISBN(isbn) {
-  try {
-    const res = await axios.get(`${BASE_URL}/${isbn}`);
-    return res.data;
-  } catch (err) {
-    console.error("getBookByISBN error:", err.message);
-    throw err;
-  }
-}
-
-/**
- * =========================================
- * EXPORTS
- * =========================================
- */
-
-module.exports = {
-  getBooks,
-  getBookByISBN,
-  getBooksPromise,
-  getBookByISBNPromise,
 };
+
+module.exports = { getBooks };

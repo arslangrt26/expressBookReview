@@ -1,52 +1,41 @@
-const axios = require("axios");
+const getBooksByTitle = async (req, res) => {
+    try {
+        const { title } = req.params;
 
-const getBooksByAuthor = async (req, res) => {
-  try {
-    const { author } = req.query;
+        const response = await axios.get(BOOKS_API_URL);
+        const books = response.data;
 
-    // 1. Validate input
-    if (!author || typeof author !== "string" || author.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Author query parameter is required and must be a non-empty string",
-        data: null
-      });
+        const filteredBooks = books.filter(
+            book => book.title && book.title.toLowerCase() === title.toLowerCase()
+        );
+
+        if (filteredBooks.length === 0) {
+            return res.status(404).json({ message: "No books found for this title" });
+        }
+
+        return res.status(200).json(filteredBooks);
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching books by title", error: error.message });
     }
-
-    const normalizedAuthor = author.trim().toLowerCase();
-
-    // 2. Fetch data
-    const response = await axios.get("https://example.com/books"); // replace with real API
-    const books = response.data;
-
-    // 3. Filter safely
-    const filteredBooks = books.filter(
-      b => b.author && b.author.toLowerCase() === normalizedAuthor
-    );
-
-    // 4. Not found case
-    if (filteredBooks.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No books found for author: ${author}`,
-        data: []
-      });
-    }
-
-    // 5. Success response
-    return res.status(200).json({
-      success: true,
-      message: "Books retrieved successfully",
-      data: filteredBooks
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error while fetching books",
-      error: error.message
-    });
-  }
 };
 
-module.exports = { getBooksByAuthor };
+const getBooksByISBN = async (req, res) => {
+    try {
+        const { isbn } = req.params;
+
+        const response = await axios.get(BOOKS_API_URL);
+        const books = response.data;
+
+        const filteredBooks = books.filter(
+            book => book.isbn === isbn
+        );
+
+        if (filteredBooks.length === 0) {
+            return res.status(404).json({ message: "No books found for this ISBN" });
+        }
+
+        return res.status(200).json(filteredBooks);
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching books by ISBN", error: error.message });
+    }
+};

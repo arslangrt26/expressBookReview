@@ -1,9 +1,8 @@
 const axios = require("axios");
 
 /*
-  Local dataset used instead of external API.
-  In a real-world scenario, this would be replaced with:
-  const BOOKS_API_URL = "https://example.com/books"
+  Local dataset (used instead of external API)
+  This keeps the project self-contained and testable
 */
 const books = [
     { isbn: "111", title: "Clean Code", author: "Robert Martin" },
@@ -13,130 +12,105 @@ const books = [
 ];
 
 
-// Simulates an async API call using a Promise
-// This keeps the structure similar to real Axios-based requests
+/**
+ * Single reusable function to fetch books
+ * Simulates an Axios API response structure
+ */
 const fetchBooks = async () => {
-    return new Promise((resolve) => {
-        resolve({ data: books });
-    });
+    return { data: books };
 };
 
 
 /**
- * Retrieve all books
- * Returns the complete list of books available in the system
+ * Utility function to extract books data once
+ * This removes repetition in handlers
+ */
+const getBooksData = async () => {
+    const response = await fetchBooks();
+    return response.data;
+};
+
+
+/**
+ * Get all books
  */
 const getAllBooks = async (req, res) => {
     try {
-        const response = await fetchBooks();
-
-        return res.status(200).json(response.data);
+        const booksData = await getBooksData();
+        return res.status(200).json(booksData);
     } catch (error) {
-        return res.status(500).json({
-            message: "Error fetching books",
-            error: error.message
-        });
+        return res.status(500).json({ error: error.message });
     }
 };
 
 
 /**
- * Retrieve books by author name
- * Filters books by matching author (case-insensitive)
+ * Get books by author
  */
 const getBooksByAuthor = async (req, res) => {
     try {
         const { author } = req.params;
+        const booksData = await getBooksData();
 
-        const response = await fetchBooks();
-        const booksData = response.data;
-
-        // Filter books where author matches input (ignoring case differences)
-        const filtered = booksData.filter(
-            book => book.author?.toLowerCase() === author.toLowerCase()
+        const result = booksData.filter(
+            b => b.author?.toLowerCase() === author.toLowerCase()
         );
 
-        if (!filtered.length) {
-            return res.status(404).json({
-                message: "No books found for this author"
-            });
+        if (!result.length) {
+            return res.status(404).json({ message: "No books found for this author" });
         }
 
-        return res.status(200).json(filtered);
+        return res.status(200).json(result);
     } catch (error) {
-        return res.status(500).json({
-            message: "Error fetching books by author",
-            error: error.message
-        });
+        return res.status(500).json({ error: error.message });
     }
 };
 
 
 /**
- * Retrieve books by title
- * Performs case-insensitive match on book title
+ * Get books by title
  */
 const getBooksByTitle = async (req, res) => {
     try {
         const { title } = req.params;
+        const booksData = await getBooksData();
 
-        const response = await fetchBooks();
-        const booksData = response.data;
-
-        // Match title ignoring case differences
-        const filtered = booksData.filter(
-            book => book.title?.toLowerCase() === title.toLowerCase()
+        const result = booksData.filter(
+            b => b.title?.toLowerCase() === title.toLowerCase()
         );
 
-        if (!filtered.length) {
-            return res.status(404).json({
-                message: "No books found for this title"
-            });
+        if (!result.length) {
+            return res.status(404).json({ message: "No books found for this title" });
         }
 
-        return res.status(200).json(filtered);
+        return res.status(200).json(result);
     } catch (error) {
-        return res.status(500).json({
-            message: "Error fetching books by title",
-            error: error.message
-        });
+        return res.status(500).json({ error: error.message });
     }
 };
 
 
 /**
- * Retrieve books by ISBN
- * Matches exact ISBN value for precise lookup
+ * Get books by ISBN
  */
 const getBooksByISBN = async (req, res) => {
     try {
         const { isbn } = req.params;
+        const booksData = await getBooksData();
 
-        const response = await fetchBooks();
-        const booksData = response.data;
+        const result = booksData.filter(b => b.isbn === isbn);
 
-        // Direct match for ISBN (unique identifier)
-        const filtered = booksData.filter(
-            book => book.isbn === isbn
-        );
-
-        if (!filtered.length) {
-            return res.status(404).json({
-                message: "No books found for this ISBN"
-            });
+        if (!result.length) {
+            return res.status(404).json({ message: "No books found for this ISBN" });
         }
 
-        return res.status(200).json(filtered);
+        return res.status(200).json(result);
     } catch (error) {
-        return res.status(500).json({
-            message: "Error fetching books by ISBN",
-            error: error.message
-        });
+        return res.status(500).json({ error: error.message });
     }
 };
 
 
-// Export all controller functions
 module.exports = {
     getAllBooks,
     getBooksByAuthor,

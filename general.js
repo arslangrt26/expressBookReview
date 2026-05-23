@@ -1,88 +1,116 @@
 // general.js
-// Axios-based API service for retrieving books by author, title, and ISBN
 
 const axios = require("axios");
 
-// Base API URL (change this to your server URL)
-const BASE_URL = "http://localhost:5000"; // e.g. Express backend
+const BASE_URL = "https://api.example.com/books";
 
-const api = axios.create({
-    baseURL: BASE_URL,
-    timeout: 5000,
-});
+/**
+ * =========================================
+ * PROMISE-BASED IMPLEMENTATION
+ * =========================================
+ */
 
-// ------------------------------
-// 1. Get all books
-// ------------------------------
-async function getAllBooks() {
-    try {
-        const response = await api.get("/books");
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching all books:", error.message);
-        throw error;
-    }
+// Get books (filter by author, title, isbn)
+function getBooksPromise(filters = {}) {
+  const { author, title, isbn } = filters;
+
+  const params = {};
+  if (author) params.author = author;
+  if (title) params.title = title;
+  if (isbn) params.isbn = isbn;
+
+  return axios
+    .get(BASE_URL, { params })
+    .then((res) => res.data)
+    .catch((err) => {
+      console.error("Promise error (getBooks):", err.message);
+      throw err;
+    });
 }
 
-// ------------------------------
-// 2. Get books by ISBN
-// ------------------------------
-async function getBooksByISBN(isbn) {
-    try {
-        const response = await api.get(`/books/isbn/${isbn}`);
-        return response.data;
-    } catch (error) {
-        console.error(`Error fetching book by ISBN (${isbn}):`, error.message);
-        throw error;
-    }
+// Get book by ISBN
+function getBookByISBNPromise(isbn) {
+  return axios
+    .get(`${BASE_URL}/${isbn}`)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.error("Promise error (getBookByISBN):", err.message);
+      throw err;
+    });
 }
 
-// ------------------------------
-// 3. Get books by Author
-// ------------------------------
-async function getBooksByAuthor(author) {
-    try {
-        const response = await api.get(`/books/author/${author}`);
-        return response.data;
-    } catch (error) {
-        console.error(`Error fetching books by author (${author}):`, error.message);
-        throw error;
-    }
+/**
+ * =========================================
+ * ASYNC / AWAIT IMPLEMENTATION
+ * =========================================
+ */
+
+// Get books (filter by author, title, isbn)
+async function getBooks(filters = {}) {
+  try {
+    const { author, title, isbn } = filters;
+
+    const params = {};
+    if (author) params.author = author;
+    if (title) params.title = title;
+    if (isbn) params.isbn = isbn;
+
+    const res = await axios.get(BASE_URL, { params });
+    return res.data;
+  } catch (err) {
+    console.error("Async error (getBooks):", err.message);
+    throw err;
+  }
 }
 
-// ------------------------------
-// 4. Get books by Title
-// ------------------------------
-async function getBooksByTitle(title) {
-    try {
-        const response = await api.get(`/books/title/${title}`);
-        return response.data;
-    } catch (error) {
-        console.error(`Error fetching books by title (${title}):`, error.message);
-        throw error;
-    }
+// Get book by ISBN
+async function getBookByISBN(isbn) {
+  try {
+    const res = await axios.get(`${BASE_URL}/${isbn}`);
+    return res.data;
+  } catch (err) {
+    console.error("Async error (getBookByISBN):", err.message);
+    throw err;
+  }
 }
 
-// ------------------------------
-// 5. Promise-based alternative (optional style)
-// ------------------------------
-function getBooksByAuthorPromise(author) {
-    return api
-        .get(`/books/author/${author}`)
-        .then(res => res.data)
-        .catch(err => {
-            console.error(`Promise error (author ${author}):`, err.message);
-            throw err;
-        });
+/**
+ * =========================================
+ * EXAMPLE USAGE (RUN DIRECTLY)
+ * =========================================
+ */
+
+async function runExamples() {
+  try {
+    console.log("=== Async/Await: All Books by Author ===");
+    const booksByAuthor = await getBooks({ author: "J.K. Rowling" });
+    console.log(booksByAuthor);
+
+    console.log("\n=== Async/Await: Book by ISBN ===");
+    const book = await getBookByISBN("9781234567890");
+    console.log(book);
+
+    console.log("\n=== Promise: Books by Title ===");
+    getBooksPromise({ title: "Harry Potter" })
+      .then((data) => console.log(data))
+      .catch((err) => console.error(err.message));
+
+  } catch (error) {
+    console.error("Run error:", error.message);
+  }
 }
 
-// ------------------------------
-// Export functions
-// ------------------------------
+// Uncomment to run examples automatically
+// runExamples();
+
+/**
+ * =========================================
+ * EXPORTS
+ * =========================================
+ */
 module.exports = {
-    getAllBooks,
-    getBooksByISBN,
-    getBooksByAuthor,
-    getBooksByTitle,
-    getBooksByAuthorPromise,
+  getBooks,
+  getBookByISBN,
+  getBooksPromise,
+  getBookByISBNPromise,
 };

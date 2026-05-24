@@ -1,50 +1,35 @@
-const axios = require("axios");
+const axios = require('axios');
 
-const books = [
-    { isbn: "111", title: "Clean Code", author: "Robert Martin" },
-    { isbn: "222", title: "The Pragmatic Programmer", author: "Andy Hunt" }
-];
-
-/**
- * Simulated async fetch (mimics external API using Axios-style structure)
- */
-const fetchBooks = async () => {
-    return { data: books };
-};
-
-
-/**
- * Retrieve books by author name
- * - Accepts author from request params
- * - Performs case-insensitive matching
- * - Returns 404 if no match found
- */
-const getBooksByAuthor = async (req, res) => {
+public_users.get('/author/:author', async function (req, res) {
     try {
-        const { author } = req.params;
+        // Normalize author input
+        const author = req.params.author.trim().toLowerCase();
 
-        const response = await fetchBooks();
-        const booksData = response.data;
+        // Fetch all books
+        const response = await axios.get('http://localhost:5000/');
+        const books = response.data;
 
-        // Normalize both input and stored data for safe comparison
-        const filteredBooks = booksData.filter(book =>
+        // Filter books by author
+        const filteredBooks = Object.values(books).filter(book =>
             book.author &&
-            book.author.toLowerCase() === author.toLowerCase()
+            book.author.toLowerCase().includes(author)
         );
 
+        // Handle no matching books
         if (filteredBooks.length === 0) {
             return res.status(404).json({
-                message: "No books found for this author"
+                message: "No books found for the given author"
             });
         }
 
+        // Return matching books
         return res.status(200).json(filteredBooks);
+
     } catch (error) {
+        // Handle server errors
         return res.status(500).json({
-            message: "Error fetching books by author",
+            message: "Error retrieving books",
             error: error.message
         });
     }
-};
-
-module.exports = { getBooksByAuthor };
+});
